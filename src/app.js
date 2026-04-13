@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const mainRouter = require("./routes/api.routes");
+const { connectDb } = require("./config/db");
 
 const app = express();
 
@@ -16,6 +17,20 @@ app.use((req, res, next) => {
 });
 
 app.use(cors());
+
+app.use(async (req, res, next) => {
+  // Keep health check light even if DB is down.
+  if (req.path === "/test") return next();
+  try {
+    await connectDb();
+    return next();
+  } catch (error) {
+    return res.status(500).json({
+      message: "Database connection failed",
+      error: error.message,
+    });
+  }
+});
 
 app.use("/api", mainRouter);
 app.use("/test", (req, res) => {
