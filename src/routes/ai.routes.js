@@ -5,7 +5,7 @@ const {
   useOpenAi,
 } = require("../controllers/ai.controller");
 
-router.get("/openai", useOpenAi);
+router.post("/openai", useOpenAi);
 router.get("/googelai", useGoogle);
 
 module.exports = router;

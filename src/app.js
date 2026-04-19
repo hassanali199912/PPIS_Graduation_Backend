@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const mainRouter = require("./routes/api.routes");
 const { connectDb } = require("./config/db");
+const { ingestPdfToChunksFile } = require("./services/RAG-system");
 
 const app = express();
 
@@ -33,16 +34,26 @@ app.use(async (req, res, next) => {
 });
 
 app.use("/api", mainRouter);
-app.use("/test", (req, res) => {
-  res.status(200).json({
-    message: "It Works ❤️❤️👍",
-    status: 200,
-    authorizer: {
-      name: "Hassan Ali Hassan",
-      email: "hassanalihassan1203@gmail.com",
-      github: "https://github.com/hassanali199912",
-    },
-  });
+app.use("/test", async (req, res) => {
+  try {
+    // const pdfPath = "./src/market.pdf";
+
+    // const data = await ingestPdfToChunksFile(pdfPath);
+    res.status(200).json({
+      message: "It Works ❤️❤️👍",
+      status: 200,
+      authorizer: {
+        name: "Hassan Ali Hassan",
+        email: "hassanalihassan1203@gmail.com",
+        github: "https://github.com/hassanali199912",
+      },
+      // data: data,
+    });
+  } catch (error) {
+    res.status(200).json({
+      error:error
+    })
+  }
 });
 
 module.exports = app;
