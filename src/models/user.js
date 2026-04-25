@@ -24,6 +24,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
+  role: {
+    type: String,
+    enum: ["user", "admin", "specialist"],
+    default: "user",
+  },
 });
 
 userSchema.pre("save", async function () {
@@ -40,7 +45,7 @@ userSchema.methods.generateAuthToken = function () {
   if (!secret) {
     throw new Error("JWT_SECRET is not set");
   }
-  const payload = { id: this._id, email: this.email };
+  const payload = { id: this._id, email: this.email , role:this.role };
   return jwt.sign(payload, secret, { expiresIn: "7d" });
 };
 

@@ -14,6 +14,7 @@ const register = async (req, res) => {
       email,
       password,
       phoneNumber,
+      role: "user",
     });
 
     const token = user.generateAuthToken();
@@ -26,6 +27,7 @@ const register = async (req, res) => {
         name: user.name,
         email: user.email,
         phoneNumber: user.phoneNumber ?? null,
+        role: user.role,
       },
     });
   } catch (error) {
@@ -46,7 +48,7 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-  
+
     if (!email || !password) {
       return res.status(400).json({
         message: "Email and password are required",
@@ -75,6 +77,7 @@ const login = async (req, res) => {
         name: user.name,
         email: user.email,
         phoneNumber: user.phoneNumber ?? null,
+        role: user.role,
       },
     });
   } catch (error) {
@@ -103,6 +106,7 @@ const createAdminUser = async (req, res) => {
       email: "admin@admin.com",
       password: "123456",
       phoneNumber: "01553880080",
+      role: "admin",
     });
 
     const token = admin.generateAuthToken();
@@ -115,6 +119,7 @@ const createAdminUser = async (req, res) => {
         name: admin.name,
         email: admin.email,
         phoneNumber: admin.phoneNumber ?? null,
+        role: admin.role,
       },
     });
   } catch (error) {

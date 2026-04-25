@@ -1,6 +1,7 @@
 /** @param {Record<string, string | number>} data */
 const buildFeasibilityPrompt = (data) => {
-  const answer = (value) => (value == null || value === "" ? "غير محدد" : value);
+  const answer = (value) =>
+    value == null || value === "" ? "غير محدد" : value;
 
   // Backward-compatible: if old payload is used, keep existing prompt style.
   if (!data.q1 && data.project_name) {
@@ -88,6 +89,7 @@ const buildFeasibilityPrompt = (data) => {
 - لا تستخدم markdown.
 - لا تستخدم '''json.
 - كل القيم النصية تكون بين "".
+- الرد يكون باللغة العربية 
 `;
 };
 

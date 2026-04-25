@@ -7,6 +7,7 @@ const fs = require("fs");
 const fsPromises = require("fs/promises");
 const path = require("path");
 const pdfParse = require("pdf-parse");
+const MarketResearch = require("../models/marketResarch");
 
 /** @typedef {"market" | "pricing" | "competitors" | "costs"} ChunkType */
 
@@ -257,6 +258,43 @@ async function ingestPdfToChunksFile(pdfPath, outputPath, options = {}) {
 }
 
 /**
+ * معالجة PDF كاملة وتخزين الـ chunks في قاعدة البيانات.
+ * @param {string} pdfPath
+ * @param {string} userId
+ * @param {string} projectId
+ * @param {{ minChunk?: number; maxChunk?: number }} [options]
+ */
+async function ingestPdfToChunksDb(pdfPath, userId, projectId, options = {}) {
+  const minChunk = options.minChunk ?? 500;
+  const maxChunk = options.maxChunk ?? 1000;
+
+  const rawText = await extractTextFromPdf(pdfPath);
+  const cleaned = cleanText(rawText);
+  const pieces = splitIntoChunks(cleaned, minChunk, maxChunk);
+  const chunks = enrichChunks(pieces, { prefix: "mk" });
+
+  const payload = {
+    source: path.basename(pdfPath),
+    sourcePath: path.resolve(pdfPath),
+    createdAt: new Date().toISOString(),
+    chunkCount: chunks.length,
+    minChunk,
+    maxChunk,
+    chunks,
+    project: projectId,
+    user: userId,
+  };
+
+  const record = await MarketResearch.create(payload);
+
+  return {
+    marketResearchId: record._id,
+    chunkCount: record.chunkCount,
+    chunks: record.chunks,
+  };
+}
+
+/**
  * تحميل الـ chunks من ملف JSON.
  * @param {string} [storePath]
  */
@@ -363,6 +401,7 @@ module.exports = {
   enrichChunks,
   extractTextFromPdf,
   ingestPdfToChunksFile,
+  ingestPdfToChunksDb,
   loadChunksFromFile,
   searchChunks,
   scoreChunk,
