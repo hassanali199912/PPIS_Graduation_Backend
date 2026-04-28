@@ -9,7 +9,7 @@ const connectDb = async () => {
     return connectionPromise;
   }
 
-  const dbUri = process.env.DB_CONNECTION;
+  const dbUri = process.env.DB_CONNECTION_2;
   if (!dbUri) {
     throw new Error("DB_CONNECTION is not set");
   }
