@@ -1,3 +1,38 @@
+/**
+ * موحّد مع واجهة TypeScript: `src/types/feasibilityStudyResponse.ts`
+ * @returns {string}
+ */
+function feasibilityJsonOutputContract() {
+  return `
+صيغة الإخراج (إلزامية وموحّدة لكل الردود):
+- أرجع كائن JSON واحد فقط بالمفاتيح التالية بالضبط (أسماء بالإنجليزية كما هي)، والمحتوى نص عربي كامل في كل حقل:
+
+{
+  "executiveSummary": "...",
+  "marketAndCustomersAnalysis": "...",
+  "competitorsAnalysis": "...",
+  "operationsModel": "...",
+  "marketingAndSalesPlan": "...",
+  "costs": {
+    "establishment": "...",
+    "operating": "..."
+  },
+  "revenueAndProfitOutlook": "...",
+  "risksAndMitigation": "...",
+  "recommendations": "...",
+  "ninetyDayActionPlan": "..."
+}
+
+قواعد صارمة:
+- لا تُضف مفاتيح أخرى في الجذر، ولا تغيّر أسماء المفاتيح.
+- الحقل costs يجب أن يكون كائنًا يحتوي فقط establishment و operating.
+- كل القيم النصية ضمن JSON بين علامتي تنصيص مزدوجة صالحة لـ JSON.
+- لا تستخدم markdown أو أي نص خارج كائن JSON واحد.
+- لا تستخدم '''json أو وسوم اللغة — أرجع JSON خام فقط يبدأ بـ { وينتهي بـ }.
+- المحتوى العربي يملأ الحقول حسب أسمائها (ملخص، تحليل، خطط، إلخ).
+`;
+}
+
 /** @param {Record<string, string | number>} data */
 const buildFeasibilityPrompt = (data) => {
   const answer = (value) =>
@@ -17,20 +52,16 @@ const buildFeasibilityPrompt = (data) => {
 الميزانية: ${data.budget}
 نمط العلامة التجارية: ${data.brand_style}
 
-المطلوب:
-- تحليل السوق
-- المنافسين
-- التكاليف المتوقعة
-- الأرباح
-- المخاطر
-- توصيات
+المطلوب في المحتوى (ضعها في الحقول المناسبة في JSON الموحّد أدناه):
+- ملخص تنفيذي
+- تحليل السوق والعملاء
+- تحليل المنافسين
+- التكاليف المتوقعة (تأسيس + تشغيل ضمن costs)
+- توقع الإيرادات والأرباح
+- المخاطر وخطط التخفيف
+- توصيات عملية وخطة 90 يوم ضمن الحقول المناسبة
 
-ارجع النتيجة في JSON فقط بدون أي نص إضافي.
-
-مهم:
-- كل القيم النصية تكون بين ""
-- لا تستخدم markdown
-- لا تستخدم '''json
+${feasibilityJsonOutputContract()}
 `;
   }
 
@@ -84,12 +115,7 @@ const buildFeasibilityPrompt = (data) => {
 - تحليل المخاطر وخطط التخفيف
 - توصيات عملية وخطة 90 يوم
 
-صيغة الإخراج:
-- أرجع النتيجة في JSON فقط بدون أي نص إضافي.
-- لا تستخدم markdown.
-- لا تستخدم '''json.
-- كل القيم النصية تكون بين "".
-- الرد يكون باللغة العربية 
+${feasibilityJsonOutputContract()}
 `;
 };
 
@@ -115,4 +141,5 @@ ${ctx}
 module.exports = {
   buildFeasibilityPrompt,
   mergeFeasibilityPromptWithRag,
+  feasibilityJsonOutputContract,
 };

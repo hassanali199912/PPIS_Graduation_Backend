@@ -319,6 +319,52 @@ function tokenizeQuery(q) {
 }
 
 /**
+ * يحوّل chunk من MongoDB/Mongoose أو كائنًا عاديًا إلى شكل ثابت للبحث وللطباعة في الـ prompt.
+ * كائنات الـ subdocument في Mongoose لا تنتشر ({...chunk}) مثل JSON العادي فيُفقد النص والحقول.
+ * @param {unknown} chunk
+ * @returns {{ id: string; text: string; type: string; keywords: string[] }}
+ */
+function normalizeChunkForRag(chunk) {
+  if (chunk == null || typeof chunk !== "object") {
+    return { id: "", text: "", type: "market", keywords: [] };
+  }
+
+  let raw;
+  if (
+    typeof chunk === "object" &&
+    chunk !== null &&
+    "toObject" in chunk &&
+    typeof /** @type {{ toObject?: (opts?: object) => object }} */ (chunk).toObject ===
+      "function"
+  ) {
+    raw = /** @type {{ toObject: (opts?: object) => object }} */ (chunk).toObject({
+      flattenMaps: true,
+    });
+  } else {
+    raw = { .../** @type {Record<string, unknown>} */ (chunk) };
+  }
+
+  const id =
+    raw.id != null && raw.id !== ""
+      ? String(raw.id)
+      : raw._id != null
+        ? String(raw._id)
+        : "";
+
+  const text = raw.text != null ? String(raw.text) : "";
+  const type =
+    raw.type != null && String(raw.type).trim() !== ""
+      ? String(raw.type)
+      : "market";
+
+  const keywords = Array.isArray(raw.keywords)
+    ? raw.keywords.map((k) => String(k))
+    : [];
+
+  return { id, text, type, keywords };
+}
+
+/**
  * نقاط بسيطة: تطابق النص، الكلمات المفتاحية في الـ chunk، وتطابق نوع محدد.
  * @param {string} query
  * @param {{ id: string; text: string; type: string; keywords: string[] }} chunk
@@ -326,7 +372,7 @@ function tokenizeQuery(q) {
  */
 function scoreChunk(query, chunk, opts = {}) {
   const q = query.toLowerCase().trim();
-  const text = chunk.text.toLowerCase();
+  const text = String(chunk.text ?? "").toLowerCase();
   const tokens = tokenizeQuery(query);
   let score = 0;
 
@@ -340,27 +386,31 @@ function scoreChunk(query, chunk, opts = {}) {
 
   if (opts.types && opts.types.length && opts.types.includes(chunk.type)) score += 4;
 
-  score += Math.min(chunk.text.length / 4000, 1);
+  score += Math.min(String(chunk.text ?? "").length / 4000, 1);
 
   return score;
 }
 
 /**
- * بحث في الـ chunks وإرجاع أفضل النتائج (افتراضيًا 5).
+ * بحث في مصفوفة chunks (مثلاً من قاعدة البيانات) وإرجاع أفضل النتائج.
+ * @param {Array<{ id: string; text: string; type: string; keywords: string[] }>} chunks
  * @param {string} query
- * @param {{ limit?: number; types?: ChunkType[]; storePath?: string } & Record<string, unknown>} [options]
+ * @param {{ limit?: number; types?: ChunkType[] }} [options]
  */
-async function searchChunks(query, options = {}) {
+function searchChunksInArray(chunks, query, options = {}) {
   const limit = options.limit ?? 5;
-  const storePath = options.storePath;
-  const data = await loadChunksFromFile(storePath);
-  const chunks = data.chunks;
+  if (!Array.isArray(chunks) || chunks.length === 0) {
+    return [];
+  }
 
   const ranked = chunks
-    .map((chunk) => ({
-      chunk,
-      score: scoreChunk(query, chunk, { types: options.types }),
-    }))
+    .map((chunk) => {
+      const plain = normalizeChunkForRag(chunk);
+      return {
+        chunk: plain,
+        score: scoreChunk(query, plain, { types: options.types }),
+      };
+    })
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
 
@@ -371,6 +421,17 @@ async function searchChunks(query, options = {}) {
 }
 
 /**
+ * بحث في الـ chunks وإرجاع أفضل النتائج (افتراضيًا 5).
+ * @param {string} query
+ * @param {{ limit?: number; types?: ChunkType[]; storePath?: string } & Record<string, unknown>} [options]
+ */
+async function searchChunks(query, options = {}) {
+  const storePath = options.storePath;
+  const data = await loadChunksFromFile(storePath);
+  return searchChunksInArray(data.chunks, query, options);
+}
+
+/**
  * تجميع أفضل النتائج كنص واحد للـ prompt.
  * @param {string} query
  * @param {{ limit?: number; types?: ChunkType[]; storePath?: string; separator?: string }} [options]
@@ -378,6 +439,30 @@ async function searchChunks(query, options = {}) {
 async function getRelevantContext(query, options = {}) {
   const sep = options.separator ?? "\n\n---\n\n";
   const results = await searchChunks(query, {
+    ...options,
+    limit: options.limit ?? 5,
+  });
+
+  if (results.length === 0) {
+    return "";
+  }
+
+  const lines = results.map(
+    (r, i) =>
+      `[${i + 1}] (type=${r.type}, id=${r.id}, score=${r.score})\n${r.text}`,
+  );
+  return lines.join(sep);
+}
+
+/**
+ * تجميع سياق RAG من chunks جاهزة (مثل MarketResearch في MongoDB).
+ * @param {Array<{ id: string; text: string; type: string; keywords: string[] }>} chunks
+ * @param {string} query
+ * @param {{ limit?: number; types?: ChunkType[]; separator?: string }} [options]
+ */
+function getRelevantContextFromChunks(chunks, query, options = {}) {
+  const sep = options.separator ?? "\n\n---\n\n";
+  const results = searchChunksInArray(chunks, query, {
     ...options,
     limit: options.limit ?? 5,
   });
@@ -404,8 +489,10 @@ module.exports = {
   ingestPdfToChunksDb,
   loadChunksFromFile,
   searchChunks,
+  searchChunksInArray,
   scoreChunk,
   getRelevantContext,
+  getRelevantContextFromChunks,
   DEFAULT_STORE_PATH,
   TYPE_KEYWORDS,
 };

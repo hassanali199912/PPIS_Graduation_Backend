@@ -24,6 +24,24 @@ const projectSchema = new mongoose.Schema(
       enum: [1, 2, 3, 4, 5],
       default: 1,
     },
+    questionAnswers: {
+      type: [String],
+      default: [],
+      validate: {
+        validator(v) {
+          return Array.isArray(v) && v.length <= 24;
+        },
+        message: "questionAnswers must have at most 24 entries (index 0 = question 1)",
+      },
+    },
+    feasibilityPrompt: {
+      type: String,
+      default: null,
+    },
+    feasibilityResponse: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
   },
   { timeseries: true },
 );
