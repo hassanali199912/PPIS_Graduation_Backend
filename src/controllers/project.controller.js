@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Project = require("../models/project");
 const MarketResearch = require("../models/marketResarch");
 const {
@@ -40,7 +41,6 @@ function hasStoredFeasibility(project) {
 const storeMarketResearch = async (req, res) => {
   try {
     const pdf = req.file;
-    console.log({ pdf });
     const userId = req.userId;
     const { projectId } = req.body;
 
@@ -52,32 +52,37 @@ const storeMarketResearch = async (req, res) => {
       });
     }
 
-    if (!projectId) {
-      fs.unlink(pdf.path, (err) => {
-        if (err) console.log(err);
-      });
-      return res.status(400).json({
-        message: "projectId is required",
-      });
-    }
+    let project =
+      projectId && mongoose.Types.ObjectId.isValid(projectId)
+        ? await Project.findOne({ _id: projectId, userId })
+        : null;
 
-    const project = await Project.findOne({ _id: projectId, userId });
+    let createdProject = false;
     if (!project) {
-      fs.unlink(pdf.path, (err) => {
-        if (err) console.log(err);
-      });
-      return res.status(404).json({
-        message: "Project not found",
+      createdProject = true;
+      project = await Project.create({
+        userId,
+        name: "default Name",
+        status: 1,
+        step: 1,
       });
     }
 
-    const data = await ingestPdfToChunksDb(pdf.path, userId, projectId);
+    const effectiveProjectId = project._id;
 
-    await Project.findByIdAndUpdate(projectId, { step: 2 });
+    const data = await ingestPdfToChunksDb(
+      pdf.path,
+      userId,
+      effectiveProjectId,
+    );
+
+    await Project.findByIdAndUpdate(effectiveProjectId, { step: 2 });
 
     res.json({
       message: "market research stored successfuly",
       data,
+      projectId: String(effectiveProjectId),
+      createdProject,
     });
   } catch (error) {
     res.status(500).json({
