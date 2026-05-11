@@ -17,4 +17,8 @@ routes.use("/project", projectRoutes);
 const requestRoutes = require("./request.routes");
 routes.use("/request", requestRoutes);
 
+/* ------------ Proxy Routes -------------- */
+const proxyRoutes = require("./proxy.routes");
+routes.use("/proxy", proxyRoutes);
+
 module.exports = routes;

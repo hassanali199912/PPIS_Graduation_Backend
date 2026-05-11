@@ -13,29 +13,14 @@ const {
 const fs = require("fs");
 
 /**
- * Maps stored answers to the feasibility prompt shape.
- * New frontend shape:
- * - answers[0] = project name
- * - answers[1..24] = q1..q24
- * Backward-compatible with older 24-answer payloads.
+ * Maps stored questionAnswers[0..23] to q1..q24 for buildFeasibilityPrompt.
  * @param {string[] | undefined} questionAnswers
- * @param {string | undefined | null} projectName
  */
-function questionAnswersToFeasibilityBody(questionAnswers, projectName) {
+function questionAnswersToFeasibilityBody(questionAnswers) {
   const body = {};
   const arr = Array.isArray(questionAnswers) ? questionAnswers : [];
-  const hasLeadingProjectName = arr.length > 24;
-  const offset = hasLeadingProjectName ? 1 : 0;
-
-  body.project_name =
-    hasLeadingProjectName && arr[0] != null && String(arr[0]).trim() !== ""
-      ? String(arr[0]).trim()
-      : projectName != null && String(projectName).trim() !== ""
-        ? String(projectName).trim()
-        : undefined;
-
   for (let i = 0; i < 24; i++) {
-    const v = arr[i + offset];
+    const v = arr[i];
     body[`q${i + 1}`] =
       v != null && String(v).trim() !== "" ? String(v) : undefined;
   }
@@ -161,7 +146,6 @@ const step1 = async (req, res) => {
 };
 
 const step2 = async (req, res) => {
-
   try {
     const userId = req.userId;
     const { projectId, answers } = req.body;
@@ -179,8 +163,7 @@ const step2 = async (req, res) => {
 
     if (answers === undefined || answers === null) {
       return res.status(400).json({
-        message:
-          "answers is required (send an array of up to 25 strings, first item is project name)",
+        message: "answers is required (send an array of up to 24 strings)",
       });
     }
 
@@ -190,31 +173,23 @@ const step2 = async (req, res) => {
       });
     }
 
-    if (answers.length > 25) {
+    if (answers.length > 24) {
       return res.status(400).json({
-        message:
-          "answers must have at most 25 items (index 0 = project name, index 1 = question 1)",
+        message: "answers must have at most 24 items (index 0 = question 1)",
       });
     }
 
     const questionAnswers = answers.map((a) =>
       a === undefined || a === null ? "" : String(a),
     );
-    const projectName =
-      questionAnswers[0] && questionAnswers[0].trim() !== ""
-        ? questionAnswers[0].trim()
-        : "default Name";
 
     const projectData = await Project.findOneAndUpdate(
       { _id: projectId, userId },
       {
-        name: projectName,
         questionAnswers,
         step: 3,
-        feasibilityPrompt: null,
-        feasibilityResponse: null,
       },
-      { returnDocument: 'after' },
+      { new: true, runValidators: true },
     );
 
     if (!projectData) {
@@ -264,7 +239,6 @@ const step3 = async (req, res) => {
         cached: true,
         prompt: project.feasibilityPrompt,
         res: project.feasibilityResponse,
-        project: project
       });
     }
 
@@ -275,7 +249,6 @@ const step3 = async (req, res) => {
 
     const feasibilityBody = questionAnswersToFeasibilityBody(
       project.questionAnswers,
-      project.name,
     );
 
     let prompt = buildFeasibilityPrompt(feasibilityBody);
@@ -294,15 +267,15 @@ const step3 = async (req, res) => {
           marketResearch.chunks,
           ragQuery,
           { limit: 5 },
-        );
+        );        
         prompt = mergeFeasibilityPromptWithRag(prompt, ragContext);
       } catch (err) {
         console.warn("RAG context skipped:", err.message);
       }
     }
 
-
-
+   
+   
     const outputText = await openrouterService.generateFeasibilityJson(prompt);
 
     let feasibilityJson;
@@ -315,7 +288,7 @@ const step3 = async (req, res) => {
       });
     }
 
-    const projectData = await Project.findByIdAndUpdate(projectId, {
+    await Project.findByIdAndUpdate(projectId, {
       step: 4,
       feasibilityPrompt: prompt,
       feasibilityResponse: feasibilityJson,
@@ -329,7 +302,6 @@ const step3 = async (req, res) => {
       marketResearchUsed: Boolean(
         marketResearch && marketResearch.chunks?.length,
       ),
-      project: projectData
     });
   } catch (error) {
     res.status(500).json({
@@ -339,10 +311,39 @@ const step3 = async (req, res) => {
   }
 };
 
+const saveLogo = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { projectId, logoUrl, logoPrompt } = req.body;
+
+    if (!projectId) {
+      return res.status(400).json({ message: "projectId is required" });
+    }
+    if (!logoUrl) {
+      return res.status(400).json({ message: "logoUrl is required" });
+    }
+
+    const project = await Project.findOneAndUpdate(
+      { _id: projectId, userId },
+      { logoUrl, logoPrompt: logoPrompt ?? null },
+      { new: true },
+    );
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found or access denied" });
+    }
+
+    res.status(200).json({ message: "Logo saved successfully", data: project });
+  } catch (error) {
+    res.status(500).json({ message: "Save logo failed", error: error.message });
+  }
+};
+
 module.exports = {
   storeMarketResearch,
   getUserProjects,
   step1,
   step2,
   step3,
+  saveLogo,
 };
