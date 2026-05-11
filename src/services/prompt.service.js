@@ -5,10 +5,17 @@
 function feasibilityJsonOutputContract() {
   return `
 صيغة الإخراج (إلزامية وموحّدة لكل الردود):
-- أرجع كائن JSON واحد فقط بالمفاتيح التالية بالضبط (أسماء بالإنجليزية كما هي)، والمحتوى نص عربي كامل في كل حقل:
+- أرجع كائن JSON واحد فقط بالمفاتيح التالية بالضبط (أسماء بالإنجليزية كما هي):
 
 {
   "executiveSummary": "...",
+  "executiveTags": ["...", "...", "..."],
+  "riskLevel": "منخفض | متوسط | مرتفع",
+  "riskScore": 0,
+  "roiPercent": 0,
+  "roiTrend": [0, 0, 0, 0, 0],
+  "marketReadinessScore": 0,
+  "marketReadinessLabel": "ضعيف | مقبول | جيد | ممتاز",
   "marketAndCustomersAnalysis": "...",
   "competitorsAnalysis": "...",
   "operationsModel": "...",
@@ -18,6 +25,7 @@ function feasibilityJsonOutputContract() {
     "operating": "..."
   },
   "revenueAndProfitOutlook": "...",
+  "technicalRequirements": "...",
   "risksAndMitigation": "...",
   "recommendations": "...",
   "ninetyDayActionPlan": "..."
@@ -25,13 +33,73 @@ function feasibilityJsonOutputContract() {
 
 قواعد صارمة:
 - لا تُضف مفاتيح أخرى في الجذر، ولا تغيّر أسماء المفاتيح.
-- الحقل costs يجب أن يكون كائنًا يحتوي فقط establishment و operating.
+- الحقل "costs" يجب أن يكون كائنًا يحتوي فقط "establishment" و "operating".
+- "executiveTags" مصفوفة من 3 إلى 5 وسوم قصيرة.
+- "riskLevel" نص واحد فقط من: "منخفض" أو "متوسط" أو "مرتفع".
+- "riskScore" رقم صحيح من 1 إلى 100 ومتسق مع "riskLevel".
+- "roiPercent" رقم صحيح موجب.
+- "roiTrend" مصفوفة من 5 أرقام صحيحة موجبة ومتدرجة منطقيًا.
+- "marketReadinessScore" رقم صحيح من 0 إلى 100.
+- "marketReadinessLabel" يجب أن يطابق "marketReadinessScore".
 - كل القيم النصية ضمن JSON بين علامتي تنصيص مزدوجة صالحة لـ JSON.
 - لا تستخدم markdown أو أي نص خارج كائن JSON واحد.
-- لا تستخدم '''json أو وسوم اللغة — أرجع JSON خام فقط يبدأ بـ { وينتهي بـ }.
-- المحتوى العربي يملأ الحقول حسب أسمائها (ملخص، تحليل، خطط، إلخ).
+- لا تستخدم '''json أو وسوم اللغة. أرجع JSON خام فقط يبدأ بـ { وينتهي بـ }.
+- المحتوى النصي يكون باللغة العربية الواضحة والمباشرة.
 `;
 }
+
+const FEASIBILITY_SYSTEM_PROMPT = `
+<goal>
+أنت مستشار أعمال ومحلل دراسات جدوى متخصص في السوق المصري والعربي.
+مهمتك الوحيدة: تحليل مدخلات المستخدم وإنتاج دراسة جدوى احترافية وواقعية
+تخدم رائد الأعمال المبتدئ أو المتوسط الخبرة في مصر.
+</goal>
+
+<context>
+- السوق المستهدف: مصر، وكل الأرقام المالية بالجنيه المصري (EGP).
+- إذا وُجدت مقتطفات RAG في الطلب، ادمجها مع إجابات المستخدم.
+- إذا تعارضت مقتطفات RAG مع إجابات المستخدم، وضّح ذلك داخل الحقل المناسب.
+- إذا كانت الإجابات متناقضة أو غير واقعية، نبّه بوضوح داخل الحقل المناسب دون رفض الدراسة.
+- إذا كان أي مدخل "غير محدد"، استخدم افتراضًا عمليًا معقولًا واذكره بوضوح داخل التحليل.
+</context>
+
+<tone>
+- لغة عربية واضحة ومباشرة، بعيدة عن الحشو.
+- كن عمليًا ومحددًا.
+- تجنب العبارات العامة الفارغة.
+</tone>
+
+<output_rules>
+## قواعد الإخراج
+${feasibilityJsonOutputContract()}
+</output_rules>
+
+<quality_standards>
+- "executiveSummary": فقرة متماسكة من 3 إلى 5 جمل تلخص المشروع، العميل، والفرصة.
+- "marketAndCustomersAnalysis": حجم السوق، سلوك العميل، والطلب المتوقع في مصر.
+- "competitorsAnalysis": المنافسون الفعليون، نقاط قوتهم وضعفهم، والفجوة السوقية.
+- "operationsModel": كيف يعمل المشروع يوميًا، والموارد والعمليات الأساسية.
+- "marketingAndSalesPlan": قنوات التسويق ورسالة البيع وخطة الوصول لأول 100 عميل.
+- "costs.establishment": تكاليف البداية بالجنيه المصري مع أهم البنود.
+- "costs.operating": التكاليف الشهرية المتكررة بالجنيه المصري.
+- "revenueAndProfitOutlook": الإيرادات المتوقعة، نقطة التعادل، وهامش الربح بصورة واقعية.
+- "technicalRequirements": الأنظمة أو الأدوات أو البرمجيات المطلوبة للمشروع.
+- "risksAndMitigation": من 3 إلى 5 مخاطر محددة مع إجراء تخفيف عملي لكل خطر.
+- "recommendations": من 3 إلى 5 توصيات عملية مرتبة بالأولوية.
+- "ninetyDayActionPlan": خطة واضحة للشهر الأول والثاني والثالث.
+</quality_standards>
+
+<planning_guidance>
+قبل صياغة الإجابة:
+1. حدّد نوع المشروع وقطاعه.
+2. قيّم واقعية رأس المال مقارنة بحجم المشروع في السوق المصري.
+3. اكشف التناقضات أو الافتراضات اللازمة.
+4. احسب "riskScore" و "marketReadinessScore" و "roiPercent" بشكل متسق منطقيًا.
+5. اجعل "roiTrend" متصاعدًا بشكل طبيعي.
+6. اختر "executiveTags" تعكس أهم الفرص الإيجابية الحقيقية للمشروع.
+7. أخرج JSON فقط.
+</planning_guidance>
+`.trim();
 
 /** @param {Record<string, string | number>} data */
 const buildFeasibilityPrompt = (data) => {
@@ -40,34 +108,25 @@ const buildFeasibilityPrompt = (data) => {
 
   // Backward-compatible: if old payload is used, keep existing prompt style.
   if (!data.q1 && data.project_name) {
-    return `
-أنت خبير دراسات جدوى.
+    return `${FEASIBILITY_SYSTEM_PROMPT}
 
-قم بإنشاء دراسة جدوى شاملة للمشروع التالي:
+<user_input>
+قم بإعداد دراسة جدوى شاملة بناء على البيانات التالية:
 
-اسم المشروع: ${data.project_name}
-الوصف: ${data.description}
-الموقع: ${data.location}
-الفئة المستهدفة: ${data.target_audience}
-الميزانية: ${data.budget}
-نمط العلامة التجارية: ${data.brand_style}
+اسم المشروع: ${answer(data.project_name)}
+الوصف: ${answer(data.description)}
+الموقع: ${answer(data.location)}
+الفئة المستهدفة: ${answer(data.target_audience)}
+الميزانية: ${answer(data.budget)}
+نمط العلامة التجارية: ${answer(data.brand_style)}
 
-المطلوب في المحتوى (ضعها في الحقول المناسبة في JSON الموحّد أدناه):
-- ملخص تنفيذي
-- تحليل السوق والعملاء
-- تحليل المنافسين
-- التكاليف المتوقعة (تأسيس + تشغيل ضمن costs)
-- توقع الإيرادات والأرباح
-- المخاطر وخطط التخفيف
-- توصيات عملية وخطة 90 يوم ضمن الحقول المناسبة
-
-${feasibilityJsonOutputContract()}
-`;
+طبّق تعليمات النظام أعلاه، والتزم بنفس عقد JSON الموحّد تمامًا.
+</user_input>`;
   }
 
-  return `
-أنت خبير دراسات جدوى محترف.
+  return `${FEASIBILITY_SYSTEM_PROMPT}
 
+<user_input>
 قم بإعداد دراسة جدوى كاملة بناء على بيانات المستخدم التالية:
 
 اسم المشروع: ${answer(data.project_name)}
@@ -106,19 +165,8 @@ ${feasibilityJsonOutputContract()}
 23) أكبر خطر ممكن يواجهك؟ => ${answer(data.q23)}
 24) طموحك إيه بعد سنتين؟ => ${answer(data.q24)}
 
-المطلوب في الدراسة:
-- ملخص تنفيذي
-- تحليل السوق والعملاء
-- تحليل المنافسين
-- نموذج التشغيل والتنفيذ
-- خطة تسويق ومبيعات
-- تقدير التكاليف (تأسيس + تشغيل)
-- توقع الإيرادات والأرباح
-- تحليل المخاطر وخطط التخفيف
-- توصيات عملية وخطة 90 يوم
-
-${feasibilityJsonOutputContract()}
-`;
+طبّق تعليمات النظام أعلاه، والتزم بنفس عقد JSON الموحّد تمامًا.
+</user_input>`;
 };
 
 /**
@@ -144,4 +192,5 @@ module.exports = {
   buildFeasibilityPrompt,
   mergeFeasibilityPromptWithRag,
   feasibilityJsonOutputContract,
+  FEASIBILITY_SYSTEM_PROMPT,
 };
