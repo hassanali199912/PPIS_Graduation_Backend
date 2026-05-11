@@ -29,9 +29,10 @@ const projectSchema = new mongoose.Schema(
       default: [],
       validate: {
         validator(v) {
-          return Array.isArray(v) && v.length <= 24;
+          return Array.isArray(v) && v.length <= 25;
         },
-        message: "questionAnswers must have at most 24 entries (index 0 = question 1)",
+        message:
+          "questionAnswers must have at most 25 entries (index 0 = project name, index 1 = question 1)",
       },
     },
     feasibilityPrompt: {
