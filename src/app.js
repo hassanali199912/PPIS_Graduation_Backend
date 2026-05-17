@@ -1,4 +1,5 @@
 const express = require("express");
+const path = require("path");
 const cors = require("cors");
 const mainRouter = require("./routes/api.routes");
 const { connectDb } = require("./config/db");
@@ -18,6 +19,11 @@ app.use((req, res, next) => {
 });
 
 app.use(cors());
+
+app.use(
+  "/uploads",
+  express.static(path.resolve(process.cwd(), "uploads")),
+);
 
 app.use(async (req, res, next) => {
   // Keep health check light even if DB is down.

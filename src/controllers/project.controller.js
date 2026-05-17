@@ -10,6 +10,8 @@ const {
   ingestPdfToChunksDb,
   getRelevantContextFromChunks,
 } = require("../services/RAG-system");
+const { buildLogoPrompt, generateAndSaveLogo } = require("../services/logo.service");
+const { v4: uuidv4 } = require("uuid");
 const fs = require("fs");
 
 /**
@@ -267,15 +269,15 @@ const step3 = async (req, res) => {
           marketResearch.chunks,
           ragQuery,
           { limit: 5 },
-        );        
+        );
         prompt = mergeFeasibilityPromptWithRag(prompt, ragContext);
       } catch (err) {
         console.warn("RAG context skipped:", err.message);
       }
     }
 
-   
-   
+
+
     const outputText = await openrouterService.generateFeasibilityJson(prompt);
 
     let feasibilityJson;
@@ -311,6 +313,83 @@ const step3 = async (req, res) => {
   }
 };
 
+const step4 = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const body = req.body?.data && typeof req.body.data === "object"
+      ? { projectId: req.body.projectId, ...req.body.data }
+      : req.body;
+
+    const {
+      projectId,
+      brandName,
+      tagline,
+      businessType,
+      symbolHint,
+      audience,
+      vibe,
+      logoStyle,
+      palette,
+    } = body;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    if (!projectId) {
+      return res.status(400).json({ message: "projectId is required" });
+    }
+
+    const project = await Project.findOne({ _id: projectId, userId });
+    if (!project) {
+      return res.status(404).json({
+        message: "Project not found or you do not have access to it",
+      });
+    }
+
+    const logoSelection = {
+      brandName: brandName ?? project.name,
+      tagline,
+      businessType,
+      symbolHint,
+      audience,
+      vibe,
+      logoStyle,
+      palette,
+    };
+
+    const variationSeed = uuidv4();
+    const logoPrompt = buildLogoPrompt(logoSelection, { variationSeed });
+    const generated = await generateAndSaveLogo(logoPrompt, {
+      seed: variationSeed,
+      replaceLogoUrl: project.logoUrl,
+    });
+
+    const updatedProject = await Project.findOneAndUpdate(
+      { _id: projectId, userId },
+      {
+        logoUrl: generated.logoUrl,
+        logoPrompt: generated.logoPrompt,
+        step: 5,
+      },
+      { runValidators: true },
+    );
+
+    res.status(200).json({
+      message: "Logo generated successfully",
+      logoUrl: generated.logoUrl,
+      relativeUrl: generated.relativeUrl,
+      logoPrompt: generated.logoPrompt,
+      data: updatedProject,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Step 4 logo generation failed",
+      error: error.message,
+    });
+  }
+};
+
 const saveLogo = async (req, res) => {
   try {
     const userId = req.userId;
@@ -326,7 +405,7 @@ const saveLogo = async (req, res) => {
     const project = await Project.findOneAndUpdate(
       { _id: projectId, userId },
       { logoUrl, logoPrompt: logoPrompt ?? null },
-      { new: true },
+      { runValidators: true },
     );
 
     if (!project) {
@@ -339,11 +418,50 @@ const saveLogo = async (req, res) => {
   }
 };
 
+const getProjectData = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { projectId } = req.params
+
+    if (!userId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    if (!projectId) {
+      return res.status(400).json({ message: "projectId is required" });
+    }
+
+    const project = await Project.findOne({ _id: projectId, userId });
+    if (!project) {
+      return res.status(404).json({
+        message: "Project not found or you do not have access to it",
+      });
+    }
+
+
+
+    res.status(200).json({
+      message: "project data fetched successfully",
+      data: project,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "fetched project data felid",
+      error: error.message,
+    });
+  }
+};
+
+
+
+
 module.exports = {
   storeMarketResearch,
   getUserProjects,
   step1,
   step2,
   step3,
+  step4,
   saveLogo,
+  getProjectData
 };
