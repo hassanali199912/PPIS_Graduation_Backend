@@ -93,7 +93,9 @@ const updateRequest = async (req, res) => {
     const request = await Request.findByIdAndUpdate(id, updates, {
       new: true,
       runValidators: true,
-    });
+    }).populate("projectId")
+    .populate("userId")
+    .populate("assignedSpecialistId");;
 
     if (!request) {
       return res.status(404).json({

@@ -1,4 +1,5 @@
 const User = require("../models/user");
+const Project = require("../models/project");
 
 const register = async (req, res) => {
   try {
@@ -130,8 +131,57 @@ const createAdminUser = async (req, res) => {
   }
 };
 
+const getAllUsersForAdmin = async (req, res) => {
+  try {
+    if (req.role !== "admin") {
+      return res.status(403).json({
+        message: "Admin access required",
+      });
+    }
+
+    const users = await User.find()
+      .select("-password")
+      .sort({ name: 1 })
+      .lean();
+
+    const projectCounts = await Project.aggregate([
+      {
+        $group: {
+          _id: "$userId",
+          projectCount: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const countByUserId = new Map(
+      projectCounts.map((row) => [String(row._id), row.projectCount]),
+    );
+
+    const data = users.map((user) => ({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      phoneNumber: user.phoneNumber ?? null,
+      role: user.role,
+      projectCount: countByUserId.get(String(user._id)) ?? 0,
+    }));
+
+    res.json({
+      message: "success",
+      count: data.length,
+      data,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Get users failed",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
   createAdminUser,
+  getAllUsersForAdmin,
 };

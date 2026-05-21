@@ -9,6 +9,8 @@ const {
   step3,
   step4,
   getProjectData,
+  getAllProjectsForAdmin,
+  getProjectByIdForAdmin,
   saveLogo,
 } = require("../controllers/project.controller");
 const { checkToken } = require("../middleware/isAuth");
@@ -20,6 +22,10 @@ routes.post(
   storeMarketResearch,
 );
 routes.get("/get-my-projects", checkToken, getUserProjects);
+
+routes.get("/admin/projects", checkToken, getAllProjectsForAdmin);
+routes.get("/admin/projects/:projectId", checkToken, getProjectByIdForAdmin);
+
 routes.get("/step1", checkToken, step1);
 routes.post("/step2", checkToken, step2);
 routes.post("/step3", checkToken, step3);

@@ -421,7 +421,7 @@ const saveLogo = async (req, res) => {
 const getProjectData = async (req, res) => {
   try {
     const userId = req.userId;
-    const { projectId } = req.params
+    const { projectId } = req.params;
 
     if (!userId) {
       return res.status(401).json({ message: "Not authenticated" });
@@ -438,8 +438,6 @@ const getProjectData = async (req, res) => {
       });
     }
 
-
-
     res.status(200).json({
       message: "project data fetched successfully",
       data: project,
@@ -452,8 +450,61 @@ const getProjectData = async (req, res) => {
   }
 };
 
+const getAllProjectsForAdmin = async (req, res) => {
+  try {
+    if (req.role !== "admin") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
 
+    const projects = await Project.find()
+      .populate("userId", "name email phoneNumber role")
+      .sort({ createdAt: -1 });
 
+    res.status(200).json({
+      message: "success",
+      count: projects.length,
+      data: projects,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Get all projects failed",
+      error: error.message,
+    });
+  }
+};
+
+const getProjectByIdForAdmin = async (req, res) => {
+  try {
+    if (req.role !== "admin") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+
+    const { projectId } = req.params;
+
+    if (!projectId || !mongoose.Types.ObjectId.isValid(projectId)) {
+      return res.status(400).json({ message: "Valid projectId is required" });
+    }
+
+    const project = await Project.findById(projectId).populate(
+      "userId",
+      "name email phoneNumber role",
+    );
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    res.status(200).json({
+      message: "success",
+      data: project,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Get project failed",
+      error: error.message,
+    });
+  }
+};
 
 module.exports = {
   storeMarketResearch,
@@ -463,5 +514,7 @@ module.exports = {
   step3,
   step4,
   saveLogo,
-  getProjectData
+  getProjectData,
+  getAllProjectsForAdmin,
+  getProjectByIdForAdmin,
 };
