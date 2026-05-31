@@ -151,6 +151,8 @@ const step2 = async (req, res) => {
   try {
     const userId = req.userId;
     const { projectId, answers } = req.body;
+
+
     if (!userId) {
       return res.status(401).json({
         message: "Not authenticated",
@@ -175,9 +177,9 @@ const step2 = async (req, res) => {
       });
     }
 
-    if (answers.length > 24) {
+    if (answers.length > 26) {
       return res.status(400).json({
-        message: "answers must have at most 24 items (index 0 = question 1)",
+        message: "answers must have at most 25 items (index 0 = question 1)",
       });
     }
 
@@ -189,6 +191,7 @@ const step2 = async (req, res) => {
       { _id: projectId, userId },
       {
         questionAnswers,
+        name: questionAnswers[0] ? questionAnswers[0] : "defult name",
         step: 3,
       },
       { new: true, runValidators: true },
