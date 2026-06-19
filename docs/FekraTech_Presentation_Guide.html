@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>FekraTech — دليل العرض والمشروع</title>
+  <style>
+    @page { size: A4; margin: 18mm 16mm; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+      font-size: 11.5pt;
+      line-height: 1.65;
+      color: #1a1a2e;
+      margin: 0;
+      padding: 24px 28px;
+      direction: rtl;
+      text-align: right;
+    }
+    h1 {
+      font-size: 22pt;
+      color: #0f3460;
+      border-bottom: 3px solid #e94560;
+      padding-bottom: 10px;
+      margin-top: 0;
+    }
+    h2 {
+      font-size: 15pt;
+      color: #16213e;
+      margin-top: 28px;
+      border-right: 4px solid #e94560;
+      padding-right: 10px;
+    }
+    h3 {
+      font-size: 12.5pt;
+      color: #0f3460;
+      margin-top: 18px;
+    }
+    .subtitle {
+      color: #555;
+      font-size: 12pt;
+      margin-bottom: 24px;
+    }
+    .alert {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 16px 0;
+    }
+    .alert strong { color: #856404; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 20px;
+      font-size: 10.5pt;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px 10px;
+      vertical-align: top;
+    }
+    th {
+      background: #0f3460;
+      color: #fff;
+      font-weight: 600;
+    }
+    tr:nth-child(even) td { background: #f8f9fa; }
+    ul, ol { padding-right: 22px; margin: 8px 0; }
+    li { margin-bottom: 6px; }
+    .flow-box {
+      background: #eef2ff;
+      border: 1px solid #c7d2fe;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-family: Consolas, monospace;
+      font-size: 10pt;
+      line-height: 1.8;
+      white-space: pre-wrap;
+      direction: ltr;
+      text-align: left;
+    }
+    .tag {
+      display: inline-block;
+      background: #e94560;
+      color: #fff;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 9pt;
+      margin-left: 6px;
+    }
+    .page-break { page-break-before: always; }
+    .footer-note {
+      margin-top: 30px;
+      padding-top: 12px;
+      border-top: 1px solid #ddd;
+      font-size: 9.5pt;
+      color: #666;
+      text-align: center;
+    }
+    .member-card {
+      background: #f0f4ff;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+    }
+    .qa-item {
+      background: #fafafa;
+      border-right: 3px solid #0f3460;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+    }
+    .qa-item strong { color: #e94560; }
+  </style>
+</head>
+<body>
+
+<h1>FekraTech — دليل العرض الشامل</h1>
+<p class="subtitle">
+  دليل تجهيز فريق مشروع التخرج للبروفة الأخيرة (21/6) والمناقشة الفعلية<br />
+  <strong>المشروع:</strong> منصة ذكية لإعداد دراسات الجدوى للمشاريع المصرية باستخدام الذكاء الاصطناعي
+</p>
+
+<div class="alert">
+  <strong>تذكير مهم من الدكاترة:</strong><br />
+  • الحضور في المعهد الساعة <strong>9:00 صباحًا</strong> — الالتزام بالميعاد ضروري<br />
+  • مدة العرض <strong>30 دقيقة</strong> لكل تيم (Presentation + Demo + Q&amp;A)<br />
+  • <strong>كل أعضاء التيم</strong> يشاركون في العرض والـ Demo — مش شخص واحد بس<br />
+  • كل عضو لازم يكون حافظ الـ Flow خطوة بخطوة وعارف يجاوب على أي سؤال Business أو Technical
+</div>
+
+<h2>1. أعضاء الفريق (Team Members)</h2>
+<p>عدّلوا الأسماء الكاملة والأدوار قبل الطباعة:</p>
+
+<div class="member-card">
+  <strong>1. حسن علي حسن</strong> — Backend Lead / API &amp; AI Integration<br />
+  <small>GitHub: hassanali199912 | مسؤول عن: Express API، OpenRouter، RAG، MongoDB</small>
+</div>
+<div class="member-card">
+  <strong>2. عبدالرحمن علي</strong> — [اكتب الدور: Frontend / Database / Testing]<br />
+  <small>GitHub: abdelrhmanali2252004</small>
+</div>
+<div class="member-card">
+  <strong>3. [اسم العضو الثالث]</strong> — [اكتب الدور: UI/UX / Documentation / Demo]<br />
+  <small>GitHub: mainour0330</small>
+</div>
+<p><em>أضيفوا أي أعضاء إضافيين في التيم هنا.</em></p>
+
+<h2>2. نبذة عن المشروع والفكرة الأساسية</h2>
+
+<h3>ما هو FekraTech؟</h3>
+<p>
+  <strong>FekraTech</strong> منصة رقمية مصرية تساعد رواد الأعمال ورواد المشاريع الصغيرة والمتوسطة
+  على إعداد <strong>دراسات جدوى احترافية</strong> بسرعة وتكلفة منخفضة باستخدام الذكاء الاصطناعي،
+  مع تركيز على السوق المصري والقوانين المحلية (مثل قانون 152 لسنة 2020 ومتطلبات البنوك المصرية).
+</p>
+
+<h3>المشكلة التي نحلها</h3>
+<ul>
+  <li>70% من الشركات الناشئة المصرية تفشل خلال أول 24 شهر — غالبًا بسبب ضعف التخطيط وليس نقص التمويل فقط</li>
+  <li>دراسات الجدوى التقليدية تكلف من 15,000 إلى 50,000 جنيه وتستغرق 2–4 أسابيع</li>
+  <li>أدوات AI العالمية (ChatGPT) لا تفهم السياق المصري: أسعار، قوانين، سوق محلي</li>
+</ul>
+
+<h3>الحل الذي نقدمه</h3>
+<ul>
+  <li><strong>Wizard ذكي</strong> — 24 سؤالًا بالعربية في 5 مراحل (الهوية، السوق، التشغيل، المالية، المخاطر)</li>
+  <li><strong>AI + RAG</strong> — توليد دراسة جدوى مخصصة مع سياق من بحث السوق المرفوع (PDF)</li>
+  <li><strong>توليد شعار</strong> — إنشاء Logo للمشروع تلقائيًا حسب الهوية البصرية</li>
+  <li><strong>Human-in-the-Loop</strong> — إمكانية طلب متخصص بشري (استشارة، بحث سوق، شعار يدوي)</li>
+  <li><strong>تسليم سريع</strong> — دراسة جدوى كاملة في دقائق بدل أسابيع</li>
+</ul>
+
+<h3>الجمهور المستهدف</h3>
+<p>
+  رواد الأعمال المصريين، طلاب الجامعات، أصحاب المشاريع الصغيرة والمتوسطة،
+  ومن يريدون تحويل فكرة إلى دراسة جدوى جاهزة للعرض على البنوك أو MSMEDA.
+</p>
+
+<div class="page-break"></div>
+
+<h2>3. التقنيات المستخدمة (Technologies)</h2>
+
+<h3>Frontend — طبقة الواجهة</h3>
+<table>
+  <tr><th>التقنية</th><th>الاستخدام</th></tr>
+  <tr><td>React</td><td>بناء واجهة المستخدم التفاعلية</td></tr>
+  <tr><td>Vite</td><td>أداة البناء والتطوير (متغير VITE_API_URL للاتصال بالباك)</td></tr>
+  <tr><td>Redux</td><td>إدارة حالة الـ Wizard وتتبع تقدم المشروع</td></tr>
+  <tr><td>TypeScript</td><td>أنواع البيانات (مثل FeasibilityStudyResponse)</td></tr>
+  <tr><td>localStorage</td><td>حفظ JWT token ومعرّف المشروع النشط</td></tr>
+  <tr><td>RTL / Arabic UI</td><td>واجهة عربية بالكامل مع دعم الاتجاه من اليمين لليسار</td></tr>
+</table>
+<p><em>ملاحظة: كود الفرونت في مستودع منفصل — الباك إند متوافق معه عبر REST API.</em></p>
+
+<h3>Backend — طبقة الخادم</h3>
+<table>
+  <tr><th>التقنية</th><th>الاستخدام</th></tr>
+  <tr><td>Node.js + JavaScript</td><td>بيئة التشغيل واللغة (CommonJS)</td></tr>
+  <tr><td>Express 5</td><td>إطار الـ REST API</td></tr>
+  <tr><td>JWT + bcrypt</td><td>المصادقة وتشفير كلمات المرور (صلاحية 7 أيام)</td></tr>
+  <tr><td>Multer</td><td>رفع ملفات PDF وبحث السوق</td></tr>
+  <tr><td>Nodemailer / Resend</td><td>إرسال OTP عبر البريد الإلكتروني</td></tr>
+  <tr><td>Twilio</td><td>إرسال OTP عبر SMS (اختياري)</td></tr>
+  <tr><td>pdf-parse</td><td>استخراج النص من PDF لنظام RAG</td></tr>
+  <tr><td>Vercel</td><td>نشر الباك إند Serverless</td></tr>
+</table>
+
+<h3>Database — قاعدة البيانات</h3>
+<table>
+  <tr><th>التقنية</th><th>التفاصيل</th></tr>
+  <tr><td>MongoDB</td><td>قاعدة بيانات NoSQL — تخزين المستخدمين والمشاريع والطلبات</td></tr>
+  <tr><td>Mongoose 9</td><td>ODM لإدارة الـ Schemas والـ Collections</td></tr>
+  <tr><td>Collections</td><td>users, projects, marketresearches, otps, requests</td></tr>
+</table>
+
+<h3>AI &amp; External Services</h3>
+<table>
+  <tr><th>الخدمة</th><th>الاستخدام</th></tr>
+  <tr><td>OpenRouter (GPT-4o-mini)</td><td>توليد دراسة الجدوى بصيغة JSON منظمة</td></tr>
+  <tr><td>Google Gemini 2.0 Flash</td><td>مسار بديل لتوليد الدراسة</td></tr>
+  <tr><td>RAG Engine (مخصص)</td><td>استرجاع سياق من chunks بحث السوق (keyword scoring)</td></tr>
+  <tr><td>Pollinations.ai</td><td>توليد شعار المشروع (Logo Generation)</td></tr>
+</table>
+
+<div class="page-break"></div>
+
+<h2>4. الـ Features الموجودة في المشروع</h2>
+
+<h3>4.1 نظام المستخدمين والمصادقة</h3>
+<ul>
+  <li>تسجيل حساب جديد (اسم، بريد، كلمة مرور، هاتف اختياري)</li>
+  <li>تسجيل الدخول والحصول على JWT Token</li>
+  <li>عرض وتعديل الملف الشخصي (الاسم فقط — البريد والهاتف للعرض)</li>
+  <li>تغيير كلمة المرور (بالكلمة الحالية أو OTP)</li>
+  <li>إضافة رقم هاتف ثانوي عبر OTP (مرة واحدة فقط)</li>
+  <li>أدوار: user / admin / specialist</li>
+</ul>
+
+<h3>4.2 دورة حياة المشروع (5 Steps Wizard)</h3>
+<table>
+  <tr><th>الخطوة</th><th>الوصف</th><th>API</th></tr>
+  <tr>
+    <td>Step 1</td>
+    <td>إنشاء مشروع جديد</td>
+    <td>GET /api/project/step1</td>
+  </tr>
+  <tr>
+    <td>Step 1.5 (اختياري)</td>
+    <td>رفع PDF بحث السوق → RAG chunks في MongoDB</td>
+    <td>POST /api/project/market-research</td>
+  </tr>
+  <tr>
+    <td>Step 2</td>
+    <td>Wizard — 24 سؤالًا بالعربية في 5 مراحل</td>
+    <td>POST /api/project/step2</td>
+  </tr>
+  <tr>
+    <td>Step 3</td>
+    <td>توليد دراسة الجدوى بالـ AI (مع RAG إن وُجد PDF)</td>
+    <td>POST /api/project/step3</td>
+  </tr>
+  <tr>
+    <td>Step 4</td>
+    <td>توليد شعار المشروع (Logo)</td>
+    <td>POST /api/project/step4</td>
+  </tr>
+  <tr>
+    <td>Step 5</td>
+    <td>المشروع مكتمل — عرض النتائج</td>
+    <td>GET /api/project/get-project/:id</td>
+  </tr>
+</table>
+
+<h3>4.3 محتوى دراسة الجدوى (AI Output)</h3>
+<p>الـ AI يُرجع JSON منظمًا بالحقول التالية:</p>
+<ul>
+  <li>executiveSummary — الملخص التنفيذي</li>
+  <li>marketAndCustomersAnalysis — تحليل السوق والعملاء</li>
+  <li>competitorsAnalysis — تحليل المنافسين</li>
+  <li>operationsModel — نموذج التشغيل</li>
+  <li>marketingAndSalesPlan — خطة التسويق والمبيعات</li>
+  <li>costs.establishment / costs.operating — تكاليف التأسيس والتشغيل</li>
+  <li>revenueAndProfitOutlook — توقع الإيرادات والأرباح</li>
+  <li>risksAndMitigation — المخاطر وخطط التخفيف</li>
+  <li>recommendations — التوصيات</li>
+  <li>ninetyDayActionPlan — خطة 90 يوم</li>
+</ul>
+
+<h3>4.4 نظام RAG (Retrieval-Augmented Generation)</h3>
+<ul>
+  <li>رفع PDF → استخراج النص → تقسيمه لـ chunks (500–1000 حرف)</li>
+  <li>تصنيف كل chunk: market / pricing / competitors / costs</li>
+  <li>عند توليد الدراسة: استرجاع أفضل 5 chunks ذات صلة وإضافتها للـ prompt</li>
+  <li>النتيجة: دراسة جدوى مبنية على بيانات السوق الفعلية وليس AI عام فقط</li>
+</ul>
+
+<h3>4.5 توليد الشعار (Logo Generation)</h3>
+<ul>
+  <li>اختيار: اسم العلامة، الشعار النصي، نوع النشاط، الجمهور، الأسلوب، الألوان</li>
+  <li>توليد عبر Pollinations.ai وحفظ في uploads/logos/</li>
+  <li>Image Proxy لتجاوز مشاكل CORS في المتصفح</li>
+</ul>
+
+<h3>4.6 طلبات المتخصصين (Human-in-the-Loop)</h3>
+<ul>
+  <li>MARKET_RESEARCH — طلب بحث سوق يدوي</li>
+  <li>MANUAL_LOGO — طلب تصميم شعار يدوي</li>
+  <li>CONSULTATION — طلب استشارة</li>
+  <li>حالات الطلب: PENDING → APPROVED / REJECTED / IN_PROGRESS → COMPLETED</li>
+</ul>
+
+<h3>4.7 لوحة الإدارة (Admin)</h3>
+<ul>
+  <li>عرض كل المستخدمين مع عدد مشاريعهم</li>
+  <li>عرض كل المشاريع وتفاصيل أي مشروع</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h2>5. الـ Demo — Flow خطوة بخطوة</h2>
+
+<p><strong>مهم:</strong> وزّعوا الـ Demo على 3 أعضاء — كل واحد يشرح جزء ويكمل اللي قبله.</p>
+
+<h3>السيناريو الكامل (15–18 دقيقة للـ Demo)</h3>
+
+<div class="flow-box">[عضو 1 — Frontend + Auth] ~5 دقائق
+─────────────────────────────────────
+1. افتح الموقع / التطبيق
+2. سجّل حساب جديد (أو Login بحساب جاهز)
+3. اشرح: JWT token، Redux، localStorage
+4. افتح Dashboard / قائمة المشاريع
+5. اضغط "مشروع جديد" → Step 1
+
+[عضو 2 — Wizard + RAG] ~6 دقائق
+─────────────────────────────────────
+6. (اختياري) ارفع PDF بحث سوق → اشرح RAG
+7. Step 2: Wizard — 24 سؤال في 5 مراحل
+   • المرحلة 1: الهوية (فكرة المشروع، النشاط، الوضع القانوني)
+   • المرحلة 2: السوق (العميل، المنطقة، المنافسين)
+   • المرحلة 3: التشغيل (الموارد، الموردين، القنوات)
+   • المرحلة 4: المالية (الميزانية، التمويل، التسعير)
+   • المرحلة 5: المخاطر (المخاطر، نقاط القوة، الأهداف)
+8. Submit → البيانات تُحفظ على MongoDB
+
+[عضو 3 — AI + Logo + Admin] ~7 دقائق
+─────────────────────────────────────
+9. Step 3: اضغط "توليد دراسة الجدوى"
+   → اشرح OpenRouter + RAG + JSON output
+   → اعرض أقسام الدراسة (ملخص، سوق، تكاليف، مخاطر...)
+10. Step 4: توليد Logo → اختر الأسلوب والألوان
+11. (اختياري) أنشئ طلب متخصص (Consultation)
+12. (اختياري) Admin panel — عرض المستخدمين والمشاريع
+13. Q&amp;A — أي عضو يكمل لو اتسأل</div>
+
+<h3>حسابات تجريبية للـ Demo</h3>
+<table>
+  <tr><th>النوع</th><th>البيانات</th></tr>
+  <tr><td>Admin</td><td>admin@admin.com / 123456</td></tr>
+  <tr><td>User</td><td>سجّلوا حساب جديد قبل العرض أو جهّزوا حساب مسبقًا</td></tr>
+</table>
+
+<h3>نصائح للـ Demo</h3>
+<ul>
+  <li>جهّزوا مشروع مكتمل مسبقًا كـ backup لو النت قطع أو الـ AI بطيء</li>
+  <li>تأكدوا إن MongoDB شغالة والـ .env فيه API keys</li>
+  <li>اختبروا الـ Demo كامل مرة على الأقل قبل 21/6</li>
+  <li>لو OpenRouter بطيء — اشرحوا إن النتيجة cached في Step 3</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h2>6. توزيع الـ Presentation (30 دقيقة)</h2>
+
+<table>
+  <tr><th>الوقت</th><th>الجزء</th><th>المسؤول (اقتراح)</th></tr>
+  <tr><td>2 د</td><td>مقدمة + Team Members</td><td>الكل يتعرف نفسه (30 ثانية لكل شخص)</td></tr>
+  <tr><td>4 د</td><td>المشكلة والحل + الفكرة</td><td>عضو 1</td></tr>
+  <tr><td>4 د</td><td>Technologies + Architecture</td><td>عضو 2 (Backend) + عضو 3 (Frontend/DB)</td></tr>
+  <tr><td>5 د</td><td>Features شرح مفصل</td><td>توزيع: Auth / Wizard / AI / Logo</td></tr>
+  <tr><td>15 د</td><td>Live Demo</td><td>الثلاثة بالتناوب (انظر Flow أعلاه)</td></tr>
+  <tr><td>5 د</td><td>Q&amp;A</td><td>أي عضو — حسب السؤال</td></tr>
+</table>
+
+<h2>7. أسئلة متوقعة في Q&amp;A (جهّزوا إجاباتها)</h2>
+
+<div class="qa-item">
+  <strong>س: ليه اخترتوا MongoDB مش SQL؟</strong><br />
+  ج: البيانات فيها هيكل مرن (JSON للدراسة، arrays للإجابات، nested chunks) — MongoDB مناسبة لـ document-based data زي feasibilityResponse.
+</div>
+
+<div class="qa-item">
+  <strong>س: إيه الفرق بينكم وبين ChatGPT؟</strong><br />
+  ج: ChatGPT عام وما بيفهمش السوق المصري. FekraTech فيه Wizard منظم + RAG من PDF بحث السوق + output JSON جاهز للعرض على البنوك.
+</div>
+
+<div class="qa-item">
+  <strong>س: إزاي RAG شغال؟</strong><br />
+  ج: PDF → chunks → keyword scoring → أفضل 5 chunks تتضاف للـ prompt. مش vector embeddings حاليًا — scoring بالكلمات المفتاحية.
+</div>
+
+<div class="qa-item">
+  <strong>س: إيه الـ AI models المستخدمة؟</strong><br />
+  ج: OpenRouter (GPT-4o-mini) أساسي، Google Gemini 2.0 Flash بديل، Pollinations.ai للشعار.
+</div>
+
+<div class="qa-item">
+  <strong>س: البيانات بتتخزن فين؟</strong><br />
+  ج: MongoDB على السيرفر — مش localStorage. localStorage في الفرونت للـ token و projectId بس.
+</div>
+
+<div class="qa-item">
+  <strong>س: إزاي بتتعاملوا مع الأمان؟</strong><br />
+  ج: JWT + bcrypt، OTP hashed، rate limiting على OTP، Bearer token في كل request محمي.
+</div>
+
+<div class="qa-item">
+  <strong>س: Human-in-the-Loop يعني إيه؟</strong><br />
+  ج: المستخدم يقدر يطلب متخصص بشري (استشارة، بحث سوق، شعار) — AI + خبرة بشرية.
+</div>
+
+<div class="qa-item">
+  <strong>س: إيه Business Model؟</strong><br />
+  ج: Tiered pricing: Starter (automated) / Pro (AI + human review) / Growth (monitoring) — أرخص بكتير من الاستشارات التقليدية.
+</div>
+
+<div class="qa-item">
+  <strong>س: إيه التحديات اللي واجهتوها؟</strong><br />
+  ج: (جهّزوا إجابة حقيقية) — مثل: جودة output الـ AI، CORS مع Pollinations، validation الـ wizard، OTP delivery.
+</div>
+
+<h2>8. Architecture Diagram (للشرح في العرض)</h2>
+
+<div class="flow-box" style="direction: rtl; text-align: right; font-family: inherit;">
+┌─────────────┐     REST API      ┌──────────────────┐
+│   Frontend  │ ◄──────────────► │   Backend        │
+│ React+Vite  │   JWT Bearer     │ Express + Node.js│
+│ Redux       │                  │                  │
+└─────────────┘                  └────────┬─────────┘
+                                          │
+                    ┌─────────────────────┼─────────────────────┐
+                    ▼                     ▼                     ▼
+             ┌──────────┐          ┌──────────┐          ┌──────────────┐
+             │ MongoDB  │          │OpenRouter│          │Pollinations  │
+             │ Users    │          │ Gemini   │          │ Logo API     │
+             │ Projects │          │ RAG Eng. │          └──────────────┘
+             │ Requests │          └──────────┘
+             └──────────┘
+</div>
+
+<h2>9. Checklist قبل 21/6</h2>
+
+<ul>
+  <li>☐ كل عضو حافظ جزءه في العرض والـ Demo</li>
+  <li>☐ Presentation جاهزة (PowerPoint / Canva) — واضحة واحترافية</li>
+  <li>☐ Demo tested end-to-end على جهاز العرض</li>
+  <li>☐ MongoDB + API keys شغالة</li>
+  <li>☐ Backup project مكتمل لو حصل مشكلة live</li>
+  <li>☐ الحضور 9:00 ص — المعهد</li>
+  <li>☐ كل عضو عارف يجاوب Business + Technical</li>
+</ul>
+
+<p class="footer-note">
+  FekraTech — Graduation Project Presentation Guide<br />
+  Generated: June 2026 | Backend Repo: hassanali199912
+</p>
+
+</body>
+</html>
