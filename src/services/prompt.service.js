@@ -5,7 +5,11 @@
 function feasibilityJsonOutputContract() {
   return `
 صيغة الإخراج (إلزامية وموحّدة لكل الردود):
-- أرجع كائن JSON واحد فقط بالمفاتيح التالية بالضبط (أسماء بالإنجليزية كما هي)، والمحتوى نص عربي كامل في كل حقل:
+- أرجع كائن JSON واحد فقط بالمفاتيح التالية بالضبط (أسماء بالإنجليزية كما هي).
+- الحقول النصية الطويلة: محتوى عربي كامل.
+- الحقل financialDashboard: أرقام محسوبة من إجابات هذا المشروع فقط — ليست قيمًا ثابتة.
+
+هيكل JSON (التزم بالمفاتيح؛ استبدل كل قيمة رقمية بحسابك الخاص):
 
 {
   "executiveSummary": "...",
@@ -20,16 +24,89 @@ function feasibilityJsonOutputContract() {
   "revenueAndProfitOutlook": "...",
   "risksAndMitigation": "...",
   "recommendations": "...",
-  "ninetyDayActionPlan": "..."
+  "ninetyDayActionPlan": "...",
+  "financialDashboard": {
+    "currency": "EGP",
+    "kpis": {
+      "breakEvenPoint": "<نص عربي قصير>",
+      "monthlyRevenue": <integer>,
+      "monthlyNetProfit": <integer>,
+      "monthlyOperatingCosts": <integer>,
+      "profitMarginPercent": <number>
+    },
+    "monthlyProjections": [
+      { "month": 1, "labelAr": "الشهر 1", "revenue": <integer>, "totalCost": <integer>, "netProfit": <integer> }
+      /* ... 6 عناصر بالضبط (month 1–6) — قيم مختلفة شهرًا بشهر */
+    ],
+    "capitalDistribution": {
+      "total": <integer>,
+      "items": [
+        { "key": "<englishKey>", "labelAr": "<عربي>", "amount": <integer>, "percentage": <number>, "details": "<اختياري>" }
+      ]
+    },
+    "revenueSources": {
+      "totalMonthly": <integer>,
+      "items": [ /* 3–4 مصادر مرتبطة بـ q10/q11 */ ]
+    },
+    "operatingCostsBreakdown": {
+      "totalMonthly": <integer>,
+      "items": [ /* 4–5 بنود مرتبطة بـ q18 ونوع النشاط */ ]
+    }
+  }
 }
 
-قواعد صارمة:
-- لا تُضف مفاتيح أخرى في الجذر، ولا تغيّر أسماء المفاتيح.
-- الحقل costs يجب أن يكون كائنًا يحتوي فقط establishment و operating.
-- كل القيم النصية ضمن JSON بين علامتي تنصيص مزدوجة صالحة لـ JSON.
-- لا تستخدم markdown أو أي نص خارج كائن JSON واحد.
-- لا تستخدم '''json أو وسوم اللغة — أرجع JSON خام فقط يبدأ بـ { وينتهي بـ }.
-- المحتوى العربي يملأ الحقول حسب أسمائها (ملخص، تحليل، خطط، إلخ).
+قواعد financialDashboard (صارمة):
+- currency دائما "EGP".
+- كل الأرقام يجب أن تُشتق من «مراسي مالية إلزامية» أعلاه (q10–q12, q16–q20) — لا تستخدم أرقامًا عامة أو متكررة بين المشاريع.
+- kpis.breakEvenPoint: نص عربي قصير مخصص لهذا المشروع.
+- monthlyNetProfit ≈ monthlyRevenue - monthlyOperatingCosts (±5%).
+- profitMarginPercent ≈ (monthlyNetProfit / monthlyRevenue) × 100 عندما revenue > 0.
+- monthlyProjections: 6 أشهر بتدرّج منطقي (غالبًا شهر 1–2 أقل ثم نمو) — لا تكرر نفس revenue/totalCost/netProfit في كل شهر.
+- capitalDistribution.total ≈ رأس المال من q16 (بعد تحويله لرقم إن كان نصًا).
+- revenueSources.totalMonthly ≈ kpis.monthlyRevenue؛ operatingCostsBreakdown.totalMonthly ≈ kpis.monthlyOperatingCosts.
+- مجموع items[].percentage في كل قسم ≈ 100.
+- labels و keys و amounts تختلف حسب نوع النشاط (q2/q9) — لا تنسخ نفس المصادر أو بنود التكلفة لمشاريع مختلفة.
+
+قواعد عامة:
+- لا تُضف مفاتيح أخرى في الجذر خارج القائمة أعلاه.
+- costs يبقى كائنًا نصيًا (establishment, operating) للتحليل المكتوب.
+- financialDashboard منفصل للرسوم البيانية في الواجهة.
+- لا markdown — JSON خام فقط يبدأ بـ { وينتهي بـ }.
+`;
+}
+
+/** @param {Record<string, string | number | undefined>} data */
+function buildFinancialAnchors(data) {
+  const answer = (value) =>
+    value == null || value === "" ? "غير محدد" : value;
+
+  return `
+مراسي مالية إلزامية — اشتق financialDashboard منها فقط (مخصصة لهذا المشروع):
+
+| المرجع | إجابة المستخدم |
+|--------|----------------|
+| فكرة المشروع (q1) | ${answer(data.q1)} |
+| نوع النشاط (q2) | ${answer(data.q2)} |
+| نموذج الإيراد (q10) | ${answer(data.q10)} |
+| قنوات الوصول (q11) | ${answer(data.q11)} |
+| حجم البداية (q12) | ${answer(data.q12)} |
+| رأس المال (q16) | ${answer(data.q16)} |
+| مصدر التمويل (q17) | ${answer(data.q17)} |
+| أهم بنود الصرف (q18) | ${answer(data.q18)} |
+| سياسة التسعير (q19) | ${answer(data.q19)} |
+| توقع الأرباح الشهرية (q20) | ${answer(data.q20)} |
+| توقع الطلب (q21) | ${answer(data.q21)} |
+| المواسم (q22) | ${answer(data.q22)} |
+
+خطوات الحساب (نفّذها قبل كتابة JSON):
+1. حوّل q16 إلى رقم EGP لـ capitalDistribution.total (مثلاً "500 ألف" → 500000).
+2. اجعل kpis.monthlyNetProfit متسقًا مع q20 (±20% واقعيًا حسب q21/q22).
+3. monthlyOperatingCosts = monthlyRevenue - monthlyNetProfit.
+4. revenueSources: 3–4 بنود من q10/q11 (مثلاً فرع، توصيل، أونلاين — حسب الإجابات).
+5. operatingCostsBreakdown: 4–5 بنود من q18 ونوع النشاط q2.
+6. monthlyProjections: 6 أشهر بقيم مختلفة تعكس ramp-up ثم استقرار/نمو.
+
+تحذير: إذا كانت إجابة q16 أو q20 «غير محدد»، قدّر نطاقًا واقعيًا لحجم q12 ونوع q2 في السوق المصري — ولا تستخدم أرقامًا افتراضية ثابتة بين المشاريع.
 `;
 }
 
@@ -37,6 +114,15 @@ function feasibilityJsonOutputContract() {
 const buildFeasibilityPrompt = (data) => {
   const answer = (value) =>
     value == null || value === "" ? "غير محدد" : value;
+
+  const financialAnchors = buildFinancialAnchors(data);
+  const financialDashboardHint = `
+مهم للواجهة الأمامية (financialDashboard):
+- KPI cards: نقطة التعادل، الإيرادات الشهرية، صافي الربح، التكاليف التشغيلية.
+- Bar chart: monthlyProjections × 6 أشهر.
+- Donut/bar: capitalDistribution، revenueSources، operatingCostsBreakdown.
+- كل رقم في financialDashboard يجب أن يختلف بين المشاريع حسب جدول المراسي المالية أدناه.
+`;
 
   // Backward-compatible: if old payload is used, keep existing prompt style.
   if (!data.q1 && data.project_name) {
@@ -52,14 +138,9 @@ const buildFeasibilityPrompt = (data) => {
 الميزانية: ${data.budget}
 نمط العلامة التجارية: ${data.brand_style}
 
-المطلوب في المحتوى (ضعها في الحقول المناسبة في JSON الموحّد أدناه):
-- ملخص تنفيذي
-- تحليل السوق والعملاء
-- تحليل المنافسين
-- التكاليف المتوقعة (تأسيس + تشغيل ضمن costs)
-- توقع الإيرادات والأرباح
-- المخاطر وخطط التخفيف
-- توصيات عملية وخطة 90 يوم ضمن الحقول المناسبة
+${financialAnchors}
+
+${financialDashboardHint}
 
 ${feasibilityJsonOutputContract()}
 `;
@@ -104,16 +185,9 @@ ${feasibilityJsonOutputContract()}
 23) أكبر خطر ممكن يواجهك؟ => ${answer(data.q23)}
 24) طموحك إيه بعد سنتين؟ => ${answer(data.q24)}
 
-المطلوب في الدراسة:
-- ملخص تنفيذي
-- تحليل السوق والعملاء
-- تحليل المنافسين
-- نموذج التشغيل والتنفيذ
-- خطة تسويق ومبيعات
-- تقدير التكاليف (تأسيس + تشغيل)
-- توقع الإيرادات والأرباح
-- تحليل المخاطر وخطط التخفيف
-- توصيات عملية وخطة 90 يوم
+${financialAnchors}
+
+${financialDashboardHint}
 
 ${feasibilityJsonOutputContract()}
 `;

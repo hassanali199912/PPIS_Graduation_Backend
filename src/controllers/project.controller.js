@@ -40,6 +40,70 @@ function hasStoredFeasibility(project) {
     typeof project.feasibilityResponse === "object";
   return hasPrompt && hasResponse;
 }
+
+/**
+ * Builds prompt, calls AI, parses JSON. Used by step3 and regenerate.
+ * @param {import("mongoose").Document} project
+ * @param {string} projectId
+ * @param {string} userId
+ * @param {{ regenerate?: boolean }} [options]
+ */
+async function generateFeasibilityStudy(project, projectId, userId, options = {}) {
+  const marketResearch = await MarketResearch.findOne({
+    project: projectId,
+    user: userId,
+  }).sort({ createdAt: -1 });
+
+  const feasibilityBody = questionAnswersToFeasibilityBody(
+    project.questionAnswers,
+  );
+
+  let prompt = buildFeasibilityPrompt(feasibilityBody);
+
+  const ragQuery =
+    `${feasibilityBody.q1 ?? ""} في ${feasibilityBody.q5 ?? ""} تحليل السوق والتكاليف والمنافسين`.trim() ||
+    "تحليل السوق والتكاليف والمنافسين";
+
+  if (
+    marketResearch &&
+    Array.isArray(marketResearch.chunks) &&
+    marketResearch.chunks.length > 0
+  ) {
+    try {
+      const ragContext = getRelevantContextFromChunks(
+        marketResearch.chunks,
+        ragQuery,
+        { limit: 5 },
+      );
+      prompt = mergeFeasibilityPromptWithRag(prompt, ragContext);
+    } catch (err) {
+      console.warn("RAG context skipped:", err.message);
+    }
+  }
+
+  const outputText = await openrouterService.generateFeasibilityJson(prompt, {
+    temperature: options.regenerate ? 0.75 : 0.65,
+  });
+
+  let feasibilityJson;
+  try {
+    feasibilityJson = JSON.parse(outputText);
+  } catch {
+    const err = new Error("AI returned non-JSON response");
+    err.statusCode = 502;
+    err.raw = outputText;
+    throw err;
+  }
+
+  return {
+    prompt,
+    feasibilityJson,
+    marketResearchUsed: Boolean(
+      marketResearch && marketResearch.chunks?.length,
+    ),
+  };
+}
+
 const storeMarketResearch = async (req, res) => {
   try {
     const pdf = req.file;
@@ -247,51 +311,8 @@ const step3 = async (req, res) => {
       });
     }
 
-    const marketResearch = await MarketResearch.findOne({
-      project: projectId,
-      user: userId,
-    }).sort({ createdAt: -1 });
-
-    const feasibilityBody = questionAnswersToFeasibilityBody(
-      project.questionAnswers,
-    );
-
-    let prompt = buildFeasibilityPrompt(feasibilityBody);
-
-    const ragQuery =
-      `${feasibilityBody.q1 ?? ""} في ${feasibilityBody.q5 ?? ""} تحليل السوق والتكاليف والمنافسين`.trim() ||
-      "تحليل السوق والتكاليف والمنافسين";
-
-    if (
-      marketResearch &&
-      Array.isArray(marketResearch.chunks) &&
-      marketResearch.chunks.length > 0
-    ) {
-      try {
-        const ragContext = getRelevantContextFromChunks(
-          marketResearch.chunks,
-          ragQuery,
-          { limit: 5 },
-        );
-        prompt = mergeFeasibilityPromptWithRag(prompt, ragContext);
-      } catch (err) {
-        console.warn("RAG context skipped:", err.message);
-      }
-    }
-
-
-
-    const outputText = await openrouterService.generateFeasibilityJson(prompt);
-
-    let feasibilityJson;
-    try {
-      feasibilityJson = JSON.parse(outputText);
-    } catch {
-      return res.status(502).json({
-        message: "AI returned non-JSON response",
-        raw: outputText,
-      });
-    }
+    const { prompt, feasibilityJson, marketResearchUsed } =
+      await generateFeasibilityStudy(project, projectId, userId);
 
     await Project.findByIdAndUpdate(projectId, {
       step: 4,
@@ -304,13 +325,70 @@ const step3 = async (req, res) => {
       cached: false,
       prompt,
       res: feasibilityJson,
-      marketResearchUsed: Boolean(
-        marketResearch && marketResearch.chunks?.length,
-      ),
+      marketResearchUsed,
     });
   } catch (error) {
+    if (error.statusCode === 502 && error.raw) {
+      return res.status(502).json({
+        message: error.message,
+        raw: error.raw,
+      });
+    }
     res.status(500).json({
       message: "Step 3 feasibility generation failed",
+      error: error.message,
+    });
+  }
+};
+
+const regenerateFeasibilityStudy = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { projectId } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    if (!projectId) {
+      return res.status(400).json({ message: "projectId is required" });
+    }
+
+    const project = await Project.findOne({ _id: projectId, userId });
+    if (!project) {
+      return res.status(404).json({
+        message: "Project not found or you do not have access to it",
+      });
+    }
+
+    const { prompt, feasibilityJson, marketResearchUsed } =
+      await generateFeasibilityStudy(project, projectId, userId, {
+        regenerate: true,
+      });
+
+    await Project.findByIdAndUpdate(projectId, {
+      step: 4,
+      feasibilityPrompt: prompt,
+      feasibilityResponse: feasibilityJson,
+    });
+
+    res.status(200).json({
+      message: "Feasibility study regenerated successfully",
+      regenerated: true,
+      cached: false,
+      prompt,
+      res: feasibilityJson,
+      marketResearchUsed,
+    });
+  } catch (error) {
+    if (error.statusCode === 502 && error.raw) {
+      return res.status(502).json({
+        message: error.message,
+        raw: error.raw,
+      });
+    }
+    res.status(500).json({
+      message: "Regenerate feasibility study failed",
       error: error.message,
     });
   }
@@ -515,6 +593,7 @@ module.exports = {
   step1,
   step2,
   step3,
+  regenerateFeasibilityStudy,
   step4,
   saveLogo,
   getProjectData,

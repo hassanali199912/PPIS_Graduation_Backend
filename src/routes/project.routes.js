@@ -7,6 +7,7 @@ const {
   step1,
   step2,
   step3,
+  regenerateFeasibilityStudy,
   step4,
   getProjectData,
   getAllProjectsForAdmin,
@@ -29,6 +30,7 @@ routes.get("/admin/projects/:projectId", checkToken, getProjectByIdForAdmin);
 routes.get("/step1", checkToken, step1);
 routes.post("/step2", checkToken, step2);
 routes.post("/step3", checkToken, step3);
+routes.post("/regenerate-feasibility", checkToken, regenerateFeasibilityStudy);
 routes.post("/step4", checkToken, step4);
 routes.get("/get-project/:projectId", checkToken, getProjectData);
 routes.post("/save-logo", checkToken, saveLogo);

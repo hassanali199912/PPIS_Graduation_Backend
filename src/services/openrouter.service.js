@@ -22,9 +22,10 @@ function wrapOpenRouterError(error) {
 
 /**
  * @param {string} prompt
+ * @param {{ temperature?: number }} [options]
  * @returns {Promise<string>}
  */
-async function generateFeasibilityJson(prompt) {
+async function generateFeasibilityJson(prompt, options = {}) {
   const apiKey = process.env.OPENROUTER_API_KEY?.trim();
   if (!apiKey) {
     throw new Error("OPENROUTER_API_KEY is not set");
@@ -43,7 +44,7 @@ async function generateFeasibilityJson(prompt) {
     const response = await client.chat.completions.create({
       model: process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
-      temperature: 0.4,
+      temperature: options.temperature ?? 0.65,
     });
 
     const text = response.choices?.[0]?.message?.content;
