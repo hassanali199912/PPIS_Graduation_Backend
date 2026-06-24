@@ -129,7 +129,7 @@ function buildLogoPrompt(data, options = {}) {
   const paletteKey = data.palette != null ? String(data.palette).trim() : "as";
 
   const parts = [
-    "Professional high-quality business logo design, vector style, centered composition, plain solid background",
+    "You are now acting as a Senior Brand Identity Designer with 15 years of experience creating successful logos for global technology and startup companies. Your goal is to generate a powerful, versatile, and instantly recognizable vector-style logo. Focus on strong typography, clean lines, a memorable symbol, and a unified composition that perfectly represents the core values of the brand.",
     `Brand name: "${data.brandName || "My Brand"}"`,
     `Tagline: "${data.tagline || "none"}"`,
     `Business type: "${data.businessType || "general business"}"`,
