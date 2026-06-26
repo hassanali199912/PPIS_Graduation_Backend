@@ -6,56 +6,82 @@ const { v4: uuidv4 } = require("uuid");
 
 /** Matches frontend LogoStyle: icon | text | mix */
 const LOGO_STYLE_LABELS = {
-  icon: "Icon / symbol only (أيقونة ورمز) — symbol mark only, no wordmark text",
-  text: "Wordmark / typography only (اسم بخط مميز) — stylized brand name lettering, minimal or no icon",
-  mix: "Combination mark (ميكس بين الاثنين) — balanced icon plus brand name text",
+  icon: "Icon / symbol only — symbol mark only, no wordmark text, no letters",
+  text: "Wordmark / typography only — stylized brand name lettering, minimal or no icon",
+  mix: "Combination mark — balanced icon plus brand name text",
 };
 
 /** Matches frontend BrandVibe: pro | fun | lux | min */
 const BRAND_VIBE_LABELS = {
-  pro: "Professional / corporate — trust and institutional feel (احترافي: ثقة ومؤسسية)",
-  fun: "Fun / energetic — lively colors and dynamic energy (مرح وحيوي: ألوان وطاقة)",
-  lux: "Luxury / elegant — refined premium details (فاخر وراقي: تفاصيل راقية)",
-  min: "Minimal / modern — clean whitespace and calm simplicity (بسيط وعصري: مساحات وهدوء)",
+  pro: "Professional / corporate — trust and institutional feel",
+  fun: "Fun / energetic — lively colors and dynamic energy",
+  lux: "Luxury / elegant — refined premium details",
+  min: "Minimal / modern — clean whitespace and calm simplicity",
 };
 
 /** Matches frontend BrandPalette: as | nile | sun | ai */
 const BRAND_PALETTES = {
   as: {
-    nameAr: "تراث أسيوط",
+    nameEn: "Assiut Heritage",
     colors: ["#1B4C8C", "#C9A05D", "#F9FAFB", "#111827", "#059669"],
   },
   nile: {
-    nameAr: "نيل هادئ",
+    nameEn: "Calm Nile",
     colors: ["#0D2F5E", "#38BDF8", "#E5E7EB", "#1E293B", "#22C55E"],
   },
   sun: {
-    nameAr: "شمس الصعيد",
+    nameEn: "Upper Egypt Sun",
     colors: ["#B45309", "#FDE68A", "#FFFBEB", "#422006", "#15803D"],
   },
   ai: {
-    nameAr: "AI يختار الألوان",
+    nameEn: "AI-selected palette",
     colors: [],
   },
 };
 
-/** When frontend sends AudienceId instead of Arabic apiValue */
-const AUDIENCE_ID_TO_API = {
-  youth: "شباب",
-  kids: "أطفال",
-  business: "رجال أعمال",
-  all: "عامة الناس",
+/** When frontend sends AudienceId instead of a display label */
+const AUDIENCE_ID_TO_LABEL = {
+  youth: "Youth",
+  kids: "Children",
+  business: "Business professionals",
+  all: "General public",
 };
+
+const LOGO_TEXT_READABILITY_RULES = [
+  "The ONLY text allowed in the image is the brand name — spelled exactly once, nothing else",
+  "Do NOT render tagline, slogan, business type, dates, URLs, or any secondary text in the image",
+  "Do NOT add curved text, circular text, text on rings, badges, seals, borders, or emblems",
+  "Do NOT add decorative letter strings, random glyphs, fake words, or filler typography anywhere",
+  "Do NOT put text in corners, edges, or around the logo perimeter",
+  "Typography must be crystal clear: sharp, evenly spaced, correctly spelled brand name only",
+  "No distorted, melted, blurred, overlapping, or gibberish text",
+  "High contrast between logo and background; plain solid white or light background only",
+  "Flat minimal vector-style logo; clean edges; readable at small sizes",
+  "Simple centered composition with generous empty space — no clutter",
+];
+
+const LOGO_NO_EXTRA_TEXT_RULES = [
+  "Strict text limit: zero extra words beyond the single brand name wordmark",
+  "No mockup frame, no watermark, no photo background, no 3D scene, no busy patterns",
+  "No stamp, certificate, label, ribbon, banner, or subtitle under the logo",
+];
+
+/**
+ * @param {string} text
+ */
+function containsArabicScript(text) {
+  return /[\u0600-\u06FF]/.test(String(text));
+}
 
 /**
  * @param {string | undefined} audience
  */
 function resolveAudienceLabel(audience) {
   if (audience == null || String(audience).trim() === "") {
-    return "عامة الناس";
+    return "General public";
   }
   const key = String(audience).trim();
-  return AUDIENCE_ID_TO_API[key] ?? key;
+  return AUDIENCE_ID_TO_LABEL[key] ?? key;
 }
 
 /**
@@ -70,10 +96,10 @@ function resolvePalettePrompt(paletteId) {
   }
 
   if (id === "ai" || entry.colors.length === 0) {
-    return `${entry.nameAr}: choose a harmonious professional palette that fits the brand and Egyptian market`;
+    return `${entry.nameEn}: choose a harmonious professional palette that fits the brand and Egyptian market`;
   }
 
-  return `${entry.nameAr} — use these hex colors: ${entry.colors.join(", ")}`;
+  return `${entry.nameEn} — use these hex colors: ${entry.colors.join(", ")}`;
 }
 
 /**
@@ -127,28 +153,60 @@ function buildLogoPrompt(data, options = {}) {
   const vibeKey = data.vibe != null ? String(data.vibe).trim() : "pro";
   const styleKey = data.logoStyle != null ? String(data.logoStyle).trim() : "mix";
   const paletteKey = data.palette != null ? String(data.palette).trim() : "as";
+  const brandName = String(data.brandName || "My Brand").trim();
+  const styleLabel =
+    LOGO_STYLE_LABELS[styleKey] ?? data.logoStyle ?? LOGO_STYLE_LABELS.mix;
 
   const parts = [
-    "You are now acting as a Senior Brand Identity Designer with 15 years of experience creating successful logos for global technology and startup companies. Your goal is to generate a powerful, versatile, and instantly recognizable vector-style logo. Focus on strong typography, clean lines, a memorable symbol, and a unified composition that perfectly represents the core values of the brand.",
-    `Brand name: "${data.brandName || "My Brand"}"`,
-    `Tagline: "${data.tagline || "none"}"`,
-    `Business type: "${data.businessType || "general business"}"`,
+    "You are a senior brand identity designer creating a minimal professional vector logo",
+    "English-only design brief",
+    `Brand name — the ONLY text that may appear in the image: "${brandName}"`,
+    `Tagline (context only — do NOT write this in the image): "${data.tagline || "none"}"`,
+    `Business type (context only — do NOT write this in the image): "${data.businessType || "general business"}"`,
     `Target audience: "${resolveAudienceLabel(data.audience)}"`,
     `Brand spirit: ${BRAND_VIBE_LABELS[vibeKey] ?? data.vibe ?? BRAND_VIBE_LABELS.pro}`,
-    `Logo style: ${LOGO_STYLE_LABELS[styleKey] ?? data.logoStyle ?? LOGO_STYLE_LABELS.mix}`,
+    `Logo style: ${styleLabel}`,
     `Color palette: ${resolvePalettePrompt(paletteKey)}`,
-    "No mockup, no watermark, no photo background, crisp edges, suitable for website and print",
+    ...LOGO_TEXT_READABILITY_RULES,
+    ...LOGO_NO_EXTRA_TEXT_RULES,
   ];
 
+  if (styleKey === "icon") {
+    parts.push(
+      "Symbol-only logo: pure icon/mark with absolutely no letters, numbers, or words anywhere in the image",
+    );
+  } else if (styleKey === "text") {
+    parts.push(
+      `Wordmark-only: show "${brandName}" once, centered, bold clean sans-serif — no icon, no ring, no circle border, no surrounding text`,
+    );
+  } else {
+    parts.push(
+      `Combination logo: simple icon plus "${brandName}" wordmark only — icon and brand name, nothing else`,
+      "Horizontal or stacked layout; no circular badge, no text wrapped around the icon, no double rings",
+    );
+  }
+
+  if (containsArabicScript(brandName) && styleKey !== "icon") {
+    parts.push(
+      `Arabic brand name: render "${brandName}" once with proper connected Arabic letter shapes, OR use one clear Latin transliteration — no extra Arabic or English text around it`,
+    );
+  }
+
   if (data.symbolHint && String(data.symbolHint).trim() !== "") {
-    parts.push(`Symbol or visual hint from client: "${String(data.symbolHint).trim()}"`);
+    parts.push(
+      `Symbol or visual hint from client: "${String(data.symbolHint).trim()}"`,
+    );
   }
 
   if (options.variationSeed) {
     parts.push(
-      `Create a distinct new logo concept (variation ${options.variationSeed}). Use a different icon shape, layout, and visual motif while keeping the same brand identity`,
+      `Variation ${options.variationSeed}: new icon shape and layout, same rules — brand name only, no extra text`,
     );
   }
+
+  parts.push(
+    "Final check: image contains logo graphic plus brand name only — remove any other letters or symbols that look like text",
+  );
 
   return parts.join(". ");
 }
@@ -240,7 +298,7 @@ async function generateAndSaveLogo(prompt, options = {}) {
   await fs.writeFile(filePath, imageBuffer);
 
   const relativeUrl = `/uploads/logos/${filename}`;
-  const baseUrl = process.env.BASE_URL
+  const baseUrl = process.env.BASE_URL || "http://localhost:8090"
     ? String(process.env.BASE_URL).replace(/\/$/, "")
     : "";
   const logoUrl = baseUrl ? `${baseUrl}${relativeUrl}` : relativeUrl;
@@ -265,7 +323,9 @@ module.exports = {
   LOGO_STYLE_LABELS,
   BRAND_VIBE_LABELS,
   BRAND_PALETTES,
-  AUDIENCE_ID_TO_API,
+  AUDIENCE_ID_TO_LABEL,
+  LOGO_TEXT_READABILITY_RULES,
+  LOGO_NO_EXTRA_TEXT_RULES,
   resolveAudienceLabel,
   resolvePalettePrompt,
   buildLogoPrompt,

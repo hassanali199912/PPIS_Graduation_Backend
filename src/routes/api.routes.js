@@ -13,9 +13,13 @@ routes.use("/ai", aiRoutes);
 const projectRoutes = require("./project.routes");
 routes.use("/project", projectRoutes);
 
-/* ------------ Project Routes -------------- */
+/* ------------ Request Routes -------------- */
 const requestRoutes = require("./request.routes");
 routes.use("/request", requestRoutes);
+
+/* ------------ Notification Routes -------------- */
+const notificationRoutes = require("./notification.routes");
+routes.use("/notification", notificationRoutes);
 
 /* ------------ Proxy Routes -------------- */
 const proxyRoutes = require("./proxy.routes");
